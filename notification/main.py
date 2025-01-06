@@ -1,28 +1,27 @@
-from fastapi import FastAPI, HTTPException
-import requests
+from redis import StrictRedis
 
-app = FastAPI(name="notification")
-app.title = "Notification service"
+def send_notify(file_path: str,telegaram_id: str,) -> str | None:
+    """Отправка сообщения"""
+    return None
 
-
-@app.get("/connection/")
-async def connection_to_auth():
-    return {"connection": "Notif service"}
-
-
-def check_connection(url: str) -> bool:
-    ok = False
+def subscribe_channel(channel_name: str):
+    """Прослушка сооющений с канала"""
+    # Пока редис использую 
+    # TODO дополнить кафку
     try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            ok = "True"
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        client = StrictRedis(host='localhost', port=6379, password='root', username='root', db=0)
+        pubsub = client.pubsub()
+        pubsub.subscribe(channel_name)
 
-    return ok
+        for message in pubsub.listen():
+            if message['type'] == 'message':
+                data = message['data'].decode('utf-8')
 
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8003, reload=True)
+    except Exception as e:
+        print("Ошибка подключения:", e)
+    finally:
+        client.close()
+    
+if __name__ == '__main__':
+    channel_name = 'notify_channel'
+    subscribe_channel(channel_name)
