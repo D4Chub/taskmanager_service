@@ -1,0 +1,59 @@
+services:
+  auth:
+    container_name: auth_service
+    build:
+      context: .
+      dockerfile: ./auth/Dockerfile
+    command: uvicorn main:app --host 0.0.0.0 --reload
+    ports:
+      - 8001:8000
+    volumes:
+      - ./auth:/app
+    depends_on:
+      - auth_db
+    networks:
+      - app_network
+
+  auth_db:
+    image: postgres:latest
+    container_name: auth_db
+    environment:
+      - POSTGRES_DB=auth_db
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+  # task:
+  #   container_name: task_service
+  #   build:
+  #     context: .
+  #     dockerfile: ./task/Dockerfile
+  #   command: uvicorn main:app --host 0.0.0.0 --reload
+  #   ports:
+  #     - 8002:8000
+  #   volumes:
+  #     - ./task:/app
+
+  # notification:
+  #   container_name: notification_service
+  #   build:
+  #     context: .
+  #     dockerfile: ./notification/Dockerfile
+  #   command: uvicorn main:app --host 0.0.0.0 --reload
+  #   ports:
+  #     - 8003:8000
+  #   volumes:
+  #     - ./notification:/app
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  app_network:
+    driver: bridge
