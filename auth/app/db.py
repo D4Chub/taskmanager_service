@@ -1,16 +1,17 @@
 from typing import Annotated
 from datetime import datetime
 
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine, AsyncAttrs, AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncAttrs, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase, declared_attr, mapped_column, Mapped
 from sqlalchemy import func
 
-from app.config import get_db_url
+from app.config import settings
 
 
-DATABASE_URL = get_db_url()
-engine = create_async_engine(DATABASE_URL)
-async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
+DATABASE_URL = f"postgresql+asyncpg://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:5432/{settings.DB_NAME}"
+engine = create_async_engine(DATABASE_URL, echo=True)
+asyncsession_maker = async_sessionmaker(bind=engine, class_=AsyncSession)
+
 
 # настройка аннотаций
 int_pk = Annotated[int, mapped_column(primary_key=True)]
@@ -29,7 +30,6 @@ class Base(AsyncAttrs, DeclarativeBase):
     updated_at: Mapped[updated_at]
 
 
-async def get_db() -> AsyncSession:
-    async with async_session_maker() as session:
+async def get_db():
+    async with asyncsession_maker() as session:
         yield session
-

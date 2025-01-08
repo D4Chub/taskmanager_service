@@ -13,7 +13,7 @@ app.title = "Auth service"
 async def root():
     return {"message": "Connected to auth service"}
 
-@app.post("/register/")
+@app.post("/register/", response_model=UserSchema)
 async def register_user(user: UserSchema, db: AsyncSession = Depends(get_db)):
     return await create_user(db=db, user=user)
 
